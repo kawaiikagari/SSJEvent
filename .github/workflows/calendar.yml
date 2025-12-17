@@ -1,0 +1,35 @@
+name: Update Today Calendar
+
+on:
+  schedule:
+    - cron: "*/30 * * * *"
+  workflow_dispatch:
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install dependencies
+        run: npm install node-fetch
+
+      - name: Generate today.json
+        run: node fetch_calendar.js
+        env:
+          ICAL_URL: ${{ secrets.ICAL_URL }}
+
+      - name: Commit and push
+        run: |
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+          git add docs/today.json
+          git commit -m "update today calendar" || exit 0
+          git push
