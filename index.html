@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="ja">
+<meta charset="UTF-8">
+<title>今日の予定</title>
+
+<h2>今日の予定</h2>
+<ul id="list">読み込み中…</ul>
+
+<script>
+const ICAL_URL = "https://calendar.google.com/calendar/ical/10bbcc5e95ad3ebc84ca5245eabc6a817e21cc54898d0ebe61a9ea202e38442a%40group.calendar.google.com/public/basic.ics";
+
+const today = new Date().toISOString().slice(0,10).replace(/-/g,"");
+
+fetch(ICAL_URL)
+.then(r => r.text())
+.then(t => {
+  const list = document.getElementById("list");
+  list.innerHTML = "";
+
+  const events = t.split("BEGIN:VEVENT").slice(1);
+  const todayEvents = [];
+
+  events.forEach(e => {
+    const s = e.match(/SUMMARY:(.+)/)?.[1];
+    const d = e.match(/DTSTART[^:]*:(\d{8}(T\d{6})?)/)?.[1];
+    if (!s || !d) return;
+    if (d.slice(0,8) !== today) return;
+
+    const time = d.length === 8 ? "終日" : d.slice(9,11)+":"+d.slice(11,13);
+    todayEvents.push({ time, title: s });
+  });
+
+  todayEvents.sort((a,b)=>a.time.localeCompare(b.time));
+
+  if (!todayEvents.length) {
+    list.innerHTML = "<li>本日の予定はありません</li>";
+    return;
+  }
+
+  todayEvents.forEach(ev=>{
+    list.innerHTML += `<li>${ev.time} ${ev.title}</li>`;
+  });
+});
+</script>
