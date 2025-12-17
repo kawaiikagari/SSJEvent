@@ -33,11 +33,13 @@ jobs:
 
       # 生成した today.json をコミット & push
       - name: Commit and push
+        uses: actions/setup-node@v4
         env:
           PAT_TOKEN: ${{ secrets.PAT_TOKEN }}
         run: |
-          git config user.name github-actions
-          git config user.email github-actions@github.com
+          echo "PAT_TOKEN=${PAT_TOKEN}"   # 確認用（ログに表示されない）
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
           git add docs/today.json
-          git commit -m "update today calendar" || exit 0
-          git push https://x-access-token:${PAT_TOKEN}@github.com/${{ github.repository }} HEAD:main
+          git diff --cached --quiet || git commit -m "update today calendar"
+          git push "https://x-access-token:${PAT_TOKEN}@github.com/${{ github.repository }}.git" HEAD:main
