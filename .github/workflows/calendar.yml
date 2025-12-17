@@ -1,5 +1,6 @@
 name: Update Today Calendar
 
+# 30分ごとに実行 + 手動実行可能
 on:
   schedule:
     - cron: "*/30 * * * *"
@@ -10,26 +11,33 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      # リポジトリをチェックアウト
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      # Node.js をセットアップ
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 20
 
+      # node-fetch をインストール
       - name: Install dependencies
         run: npm install node-fetch
 
+      # today.json を生成
       - name: Generate today.json
         run: node fetch_calendar.js
         env:
           ICAL_URL: ${{ secrets.ICAL_URL }}
 
+      # 生成した today.json をコミット & push
       - name: Commit and push
+        env:
+          PAT_TOKEN: ${{ secrets.PAT_TOKEN }}
         run: |
           git config user.name github-actions
           git config user.email github-actions@github.com
           git add docs/today.json
           git commit -m "update today calendar" || exit 0
-          git push
+          git push https://x-access-token:${PAT_TOKEN}@github.com/${{ github.repository }} HEAD:main
